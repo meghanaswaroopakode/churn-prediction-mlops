@@ -1,0 +1,50 @@
+name: Lab 13 - Monitoring Success
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'github-reports/lab13/**'
+      - '.github/workflows/lab13_monitoring.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-monitoring:
+    name: LAB 13 MONITORING SUCCESSFUL
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Lab 13 monitoring output
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report_path = Path("github-reports/lab13/monitoring/monitor_trigger_report.json")
+
+          if not report_path.exists():
+              raise SystemExit("ERROR: Lab 13 monitoring report not found.")
+
+          with report_path.open(encoding="utf-8") as file:
+              report = json.load(file)
+
+          if report.get("drift_detected") is not True:
+              raise SystemExit("ERROR: Expected drift detection was not recorded.")
+
+          if report.get("status") != "drift_waiting_for_data":
+              raise SystemExit("ERROR: Unexpected monitoring status.")
+
+          print("========================================")
+          print("? LAB 13 MONITORING SUCCESSFUL")
+          print("========================================")
+          print("Drift detected       : YES")
+          print("New data available   : NO")
+          print("Retraining triggered : NO")
+          print("Status               : Waiting for new data")
+          print("Report validation    : PASSED")
+          PY
